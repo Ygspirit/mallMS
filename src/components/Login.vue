@@ -47,7 +47,7 @@ export default {
       loginForm: {
         username: 'admin',
         password: '123456'
-      },F
+      },
       // 表单的验证规则对象
       loginFormRules: {
         // 验证用户
