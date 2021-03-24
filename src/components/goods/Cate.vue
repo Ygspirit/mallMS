@@ -49,11 +49,19 @@
           <el-tag size="mini" v-else type="warning">三级</el-tag>
         </template>
         <!-- 操作列 -->
-        <template slot="opt" slot-scope="">
-          <el-button type="primary" icon="el-icon-edit" size="mini"
+        <template slot="opt" slot-scope="scope">
+          <el-button
+            type="primary"
+            icon="el-icon-edit"
+            size="mini"
+            @click="showEditCateDialog(scope.row.cat_id)"
             >编辑</el-button
           >
-          <el-button type="danger" icon="el-icon-delete" size="mini"
+          <el-button
+            type="danger"
+            icon="el-icon-delete"
+            size="mini"
+            @click="removeCateById(scope.row.cat_id)"
             >删除</el-button
           >
         </template>
@@ -104,6 +112,31 @@
         <span class="dialog-footer">
           <el-button @click="addCateDialogVisible = false">取 消</el-button>
           <el-button type="primary" @click="addCate">确 定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 编辑分类信息的对话框 -->
+    <el-dialog
+      title="添加分类"
+      :visible.sync="editCateDialogVisible"
+      width="50%"
+      @close="editCateDialogClosed"
+    >
+      <el-form
+        :model="editCateForm"
+        :rules="editCateFormRules"
+        ref="editCateFormRef"
+        label-width="100px"
+      >
+        <el-form-item label="活动名称" prop="cat_name">
+          <el-input v-model="editCateForm.cat_name"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="editCateDialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="editCate">确 定</el-button>
         </span>
       </template>
     </el-dialog>
@@ -175,7 +208,15 @@ export default {
         expandTrigger: 'hover'
       },
       // 选中的父级分类的Id数组
-      selectedKeys: []
+      selectedKeys: [],
+      // 控制编辑分类信息对话框的显示
+      editCateDialogVisible: false,
+      editCateForm: {},
+      editCateFormRules: {
+        cat_name: [
+          { required: true, message: '请输入分类名称', trigger: 'blur' }
+        ]
+      }
     };
   },
   created() {
@@ -267,6 +308,58 @@ export default {
       this.selectedKeys = [];
       this.addCateForm.cat_pid = 0;
       this.addCateForm.cat_level = 0;
+    },
+
+    // 编辑分类信息
+    async showEditCateDialog(id) {
+      const { data: res } = await this.$http.get('categories/' + id);
+      if (res.meta.status !== 200) {
+        return this.$message.error('查询对应分类信息失败！');
+      }
+      this.editCateForm = res.data;
+      this.editCateDialogVisible = true;
+    },
+    editCateDialogClosed() {
+      this.$refs.editCateFormRef.resetFields();
+    },
+    editCate() {
+      this.$refs.editCateFormRef.validate(async valid => {
+        if (!valid) return;
+        const { data: res } = await this.$http.put(
+          `categories/${this.editCateForm.cat_id}`,
+          {
+            cat_name: this.editCateForm.cat_name
+          }
+        );
+        if (res.meta.status !== 200) {
+          return this.$message.error('修改分类信息失败！');
+        }
+        this.$message.success('修改分类信息成功');
+        this.getCateList();
+        this.editCateDialogVisible = false;
+      });
+    },
+    // 弹框提示用户是否删除分类信息
+    async removeCateById(id) {
+      const confirmRes = await this.$confirm(
+        '此操作将永久删除该分类, 是否继续?',
+        '提示',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      ).catch(err => err);
+      if (confirmRes !== 'confirm') {
+        return this.$message.info('已取消删除');
+      }
+
+      const { data: res } = await this.$http.delete('categories/' + id);
+      if (res.meta.status !== 200) {
+        return this.$message.error('删除分类信息失败!');
+      }
+      this.$message.success('删除分类信息成功');
+      this.getCateList();
     }
   }
 };
@@ -279,24 +372,24 @@ export default {
 .el-cascader {
   width: 100%;
 }
-.el-cascader-panel{
-    height: 200px;
+.el-cascader-panel {
+  height: 200px;
 }
 .el-cascader-panel .el-radio {
- width: 100%;
- height: 100%;
- z-index: 10;
- position: absolute;
- top: 0px;
- right: 10px;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  position: absolute;
+  top: 0px;
+  right: 10px;
 }
 .el-cascader-node__label {
- width: 157px;
+  width: 157px;
 }
 .el-cascader-panel .el-radio__input {
- visibility: hidden;
+  visibility: hidden;
 }
 .el-cascader-panel .el-cascader-node__postfix {
- top: 10px;
+  top: 10px;
 }
 </style>
