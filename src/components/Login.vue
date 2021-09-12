@@ -15,7 +15,7 @@
         class="login-form"
       >
         <!-- 用户名 -->
-        <el-form-item prop="username">
+        <el-form-item prop="username" class="username">
           <el-input
             v-model="loginForm.username"
             prefix-icon="iconfont icon-user"
@@ -133,7 +133,7 @@ export default {
   background-color: #eee;
 }
 
-.login-form {
+.login-container .login-form {
   position: absolute;
   bottom: 0;
   width: 100%;
@@ -141,6 +141,9 @@ export default {
   box-sizing: border-box;
 }
 
+.login-container .login-form .username {
+  margin-top: 110px;
+}
 .btns {
   display: flex;
   justify-content: flex-end;
